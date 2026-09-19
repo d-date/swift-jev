@@ -89,7 +89,12 @@ public struct JevClient: Sendable {
     state: some Encodable & Sendable,
     questions: JevQuestionSet
   ) async throws -> JevResponse {
-    let body = try encodeBody(state: state, questions: questions)
+    let body: Data
+    do {
+      body = try encodeBody(state: state, questions: questions)
+    } catch {
+      throw JevError.invalidRequestBody(underlying: error)
+    }
     let request = JevHTTPRequest(
       url: endpoint,
       headers: [

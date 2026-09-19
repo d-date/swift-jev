@@ -156,15 +156,24 @@ extension JevAnswers {
     try score(named: question.name)
   }
 
-  /// `nil` when the question was not answered.
+  /// `nil` unless the matching answer is one `require(_:)` would hand back.
+  ///
+  /// Looking the answer up by name alone is not enough. A name can carry an answer
+  /// of another kind, or a choice the options type does not have, and in both cases
+  /// the caller cannot obtain a value. Returning a confidence there would let a
+  /// routing policy say "act without asking" about an answer that does not exist.
   public func confidence<Options: JevChoiceOptions>(
     of question: ChoiceQuestion<Options>
   ) -> Double? {
-    self[question.name]?.confidence
+    guard (try? require(question)) != nil,
+      case .choice(let choice) = self[question.name]
+    else { return nil }
+    return choice.confidence
   }
 
   public func confidence(of question: ScoreQuestion) -> Double? {
-    self[question.name]?.confidence
+    guard case .score(let score) = self[question.name] else { return nil }
+    return score.confidence
   }
 
   // There is deliberately no `confidence(of:)` taking a NoulQuestion.

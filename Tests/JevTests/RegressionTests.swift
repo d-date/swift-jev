@@ -199,3 +199,87 @@ private final class Recorder: @unchecked Sendable {
     lock.withLock { storage }
   }
 }
+
+/// Found in the release review. Routing said "act automatically" for answers the
+/// caller could not actually obtain, which is the one thing this library must not do.
+@Suite("Routing cannot outrun the answer")
+struct RoutingConsistencyTests {
+  private let policy = RoutingPolicy.default
+
+  private var response: JevResponse {
+    get throws {
+      let json = """
+        {"model":"m","answers":{
+          "department":{"type":"choice","choice":"billing","confidence":0.95,
+                        "probabilities":{"billing":0.95,"technical":0.05}},
+          "other":{"type":"choice","choice":"legal","confidence":0.97,
+                   "probabilities":{"legal":0.97}}},
+         "usage":{"input_tokens":1,"output_tokens":0}}
+        """
+      return try JSONDecoder().decode(JevResponse.self, from: Data(json.utf8))
+    }
+  }
+
+  @Test("a question of the wrong kind yields no confidence and escalates")
+  func wrongKind() throws {
+    // The wire answer is a choice; this question reads the same name as a score.
+    let asScore = ScoreQuestion("department", "How bad?", levels: ["a", "b"])
+    let response = try response
+    #expect(throws: JevError.self) { try response.require(asScore) }
+    #expect(response.confidence(of: asScore) == nil)
+    #expect(policy.decide(response, of: asScore) == .escalate)
+  }
+
+  @Test("an unrecognised choice yields no confidence and escalates")
+  func unrecognizedChoice() throws {
+    let other = ChoiceQuestion<Department>("other", "Which team?")
+    let response = try response
+    #expect(throws: JevError.self) { try response.require(other) }
+    #expect(response.confidence(of: other) == nil)
+    #expect(policy.decide(response, of: other) == .escalate)
+  }
+
+  @Test("whenever confidence is non-nil, the answer is obtainable")
+  func confidenceImpliesObtainable() throws {
+    let department = ChoiceQuestion<Department>("department", "Which team?")
+    let response = try response
+    #expect(response.confidence(of: department) == 0.95)
+    #expect(try response.require(department) == .billing)
+  }
+
+  @Test("a confidence outside 0...1 is rejected at the boundary", arguments: ["2.0", "-0.1"])
+  func confidenceOutOfRange(_ value: String) {
+    let json = """
+      {"model":"m","answers":{"x":{"type":"choice","choice":"a","confidence":\(value),
+       "probabilities":{"a":1.0}}},"usage":{"input_tokens":1,"output_tokens":0}}
+      """
+    #expect(throws: (any Error).self) {
+      try JSONDecoder().decode(JevResponse.self, from: Data(json.utf8))
+    }
+  }
+
+  @Test("an unencodable state fails as a JevError like everything else")
+  func encodingFailure() async throws {
+    struct Unencodable: Encodable, Sendable {
+      func encode(to encoder: any Encoder) throws {
+        throw EncodingError.invalidValue(
+          self, .init(codingPath: [], debugDescription: "nope")
+        )
+      }
+    }
+    let client = JevClient(
+      apiKey: "k", model: "jev-latest", endpoint: .jevSystemOne,
+      transport: StubTransport([JevHTTPResponse.ok(realTriageJSON)]),
+      retryPolicy: .none, sleep: { _ in }, randomness: { 0.5 }, now: { Date() }
+    )
+    do {
+      _ = try await client.evaluate(state: Unencodable()) { urgency }
+      Issue.record("expected a failure")
+    } catch let error as JevError {
+      guard case .invalidRequestBody = error else {
+        Issue.record("expected .invalidRequestBody, got \(error)")
+        return
+      }
+    }
+  }
+}

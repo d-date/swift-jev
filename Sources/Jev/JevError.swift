@@ -38,6 +38,9 @@ public enum JevError: Error, Sendable {
   case invalidQuestion(name: String, reason: InvalidQuestionReason)
   case duplicateQuestionName(String)
   case emptyQuestionSet
+  /// The state could not be encoded. Wrapped so that every failure out of
+  /// `evaluate` is a `JevError`, as the documentation claims.
+  case invalidRequestBody(underlying: any Error)
 }
 
 public enum InvalidQuestionReason: Sendable, Hashable {
@@ -79,6 +82,8 @@ extension JevError: CustomStringConvertible {
       "question name '\(name)' is used more than once"
     case .emptyQuestionSet:
       "a request must carry at least one question"
+    case .invalidRequestBody(let error):
+      "the state could not be encoded: \(error)"
     }
   }
 }
@@ -113,6 +118,8 @@ extension JevError: Equatable {
       na == nb && ra == rb
     case let (.duplicateQuestionName(a), .duplicateQuestionName(b)):
       a == b
+    case let (.invalidRequestBody(a), .invalidRequestBody(b)):
+      String(describing: a) == String(describing: b)
     default:
       false
     }
@@ -143,6 +150,8 @@ extension JevError: Hashable {
       hasher.combine(11); hasher.combine(name); hasher.combine(reason)
     case .duplicateQuestionName(let name): hasher.combine(12); hasher.combine(name)
     case .emptyQuestionSet: hasher.combine(13)
+    case .invalidRequestBody(let error):
+      hasher.combine(14); hasher.combine(String(describing: error))
     }
   }
 }

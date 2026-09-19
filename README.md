@@ -60,8 +60,10 @@ asking more of them costs almost no extra latency.
 .product(name: "Jev", package: "swift-jev")
 ```
 
-Requires Swift 6.2. Supports macOS 13+, iOS 16+, tvOS 16+, watchOS 9+, visionOS 1+
-and Linux. **No dependencies**, so a clean build takes about 20 seconds.
+Requires Swift 6.2. Supports macOS 13+, iOS 16+, tvOS 16+, watchOS 9+ and
+visionOS 1+. Linux is declared and the code is written for it, but it is not yet
+covered by CI — treat it as untested. **No dependencies**, so a clean build takes
+about 20 seconds.
 
 ## The three primitives
 
@@ -85,6 +87,17 @@ form and returns `nil`.
 try response.require(department)  // Department, or throws .missingAnswer / .unrecognizedChoice
 response[department]              // Department?
 ```
+
+A question is matched to its answer **by name**. Read answers with the same question
+values you sent, and do not reuse a name for a different question: a second question
+with the same name and kind would read the first one's answer. Names are how the API
+itself identifies answers, so this is the API's model rather than a limitation added
+here.
+
+`confidence(of:)` returns a value only when `require(_:)` would also succeed. If the
+answer is of another kind, or is a choice the options type does not have, it returns
+`nil` and routing escalates — a confidence that outran the answer would be the one
+mistake this library must not make.
 
 ### Noul has no confidence, and the types say so
 
@@ -140,7 +153,8 @@ about.
 
 ## Errors
 
-Everything fails with `JevError`, so there is one contract rather than two.
+Everything out of `evaluate` fails with `JevError`, so there is one contract rather
+than two — including a state that cannot be encoded.
 
 | Case | When |
 |---|---|
@@ -150,6 +164,7 @@ Everything fails with `JevError`, so there is one contract rather than two.
 | `.unrecognizedChoice` | the model returned an option the enum does not have |
 | `.malformedResponse` / `.unknownAnswerType` | the body is not the documented shape |
 | `.invalidQuestion` / `.duplicateQuestionName` | the request could not be built |
+| `.invalidRequestBody` | the state could not be encoded |
 
 `CancellationError` is never wrapped.
 

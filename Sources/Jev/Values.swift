@@ -102,6 +102,12 @@ extension ScoreValue: Codable {
     let rawLegend = try container.decodeIfPresent([String: String].self, forKey: .legend) ?? [:]
     let rawProbabilities = try container.decode([String: Double].self, forKey: .probabilities)
     let confidence = try container.decode(Double.self, forKey: .confidence)
+    guard !confidence.isNaN, (0...1).contains(confidence) else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .confidence, in: container,
+        debugDescription: "confidence must be within 0...1, got \(confidence)"
+      )
+    }
 
     // Levels arrive as stringified integers. Convert first, then validate: "0" and
     // "00" are two string keys but one level, and counting before converting would

@@ -79,7 +79,7 @@ struct NamedAnswerDecoder {
         Answer.Choice(
           value: try nested.decode(String.self, forKey: .choice),
           probabilities: try nested.decode([String: Double].self, forKey: .probabilities),
-          confidence: try nested.decode(Double.self, forKey: .confidence)
+          confidence: try Answer.decodeConfidence(from: nested)
         )
       )
     case "score":
@@ -95,6 +95,23 @@ struct NamedAnswerDecoder {
 extension Answer {
   enum CodingKeys: String, CodingKey {
     case type, noul, choice, score, legend, probabilities, confidence
+  }
+
+  /// A confidence is a probability, so it is bounded like one.
+  ///
+  /// Without this, a confidence of 2.0 would sail past every threshold a routing
+  /// policy can set and read as "act without asking".
+  static func decodeConfidence(
+    from container: KeyedDecodingContainer<CodingKeys>
+  ) throws -> Double {
+    let value = try container.decode(Double.self, forKey: .confidence)
+    guard !value.isNaN, (0...1).contains(value) else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .confidence, in: container,
+        debugDescription: "confidence must be within 0...1, got \(value)"
+      )
+    }
+    return value
   }
 }
 
