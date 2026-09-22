@@ -129,11 +129,55 @@ or configuration errors and 1 for API or network errors. `--model` defaults to
 `jev-latest`; `--endpoint` accepts compatible HTTPS endpoints and local HTTP
 endpoints for testing.
 
-The shared [Jev skill](skills/jev/SKILL.md) is linked at `.agents/skills/jev` for
-Codex and `.claude/skills/jev` for Claude Code. From this checkout, ask either
-agent to use the `jev` skill to evaluate a state and describe the questions you
-want answered. Give the agent process access to `TYPESAFE_API_KEY` or an API key
-file; the skill does not store the key.
+### Install the `jev` command
+
+Build the release binary and put it in a directory on your `PATH`:
+
+```sh
+swift build -c release
+mkdir -p "$HOME/.local/bin"
+install -m 755 .build/release/jev "$HOME/.local/bin/jev"
+export PATH="$HOME/.local/bin:$PATH"
+jev --help
+```
+
+Run these commands from the swift-jev checkout. Add
+`export PATH="$HOME/.local/bin:$PATH"` to your shell startup file (for example,
+`~/.zshrc`) to make the command available in new shells. Restart your coding
+agent after changing `PATH` so its process can find `jev`. You can also run
+`swift run jev` from this checkout without installing the binary.
+
+### Install the agent skill
+
+The [Jev skill](skills/jev/SKILL.md) tells an agent how to prepare a request and
+interpret the response. The `jev` command must also be available to that agent.
+From the swift-jev checkout, copy the skill into the project where you use the
+agent:
+
+```sh
+SKILL_ROOT=/path/to/your/project
+mkdir -p "$SKILL_ROOT/.agents/skills/jev" "$SKILL_ROOT/.claude/skills/jev"
+cp -R skills/jev/. "$SKILL_ROOT/.agents/skills/jev/"
+cp -R skills/jev/. "$SKILL_ROOT/.claude/skills/jev/"
+```
+
+Use `SKILL_ROOT="$HOME"` instead for a user-wide installation. The shared
+`.agents/skills/jev` copy covers Codex, Cursor, Gemini CLI, and GitHub Copilot;
+Claude Code uses the `.claude/skills/jev` copy. You can install only the copy
+needed for your agent. Their supported locations are:
+
+| Agent | Project skill directory | User skill directory |
+|---|---|---|
+| [Codex](https://learn.chatgpt.com/docs/build-skills) | `.agents/skills/jev` | `~/.agents/skills/jev` |
+| [Claude Code](https://code.claude.com/docs/en/skills) | `.claude/skills/jev` | `~/.claude/skills/jev` |
+| [Cursor](https://prod.cursor.com/docs/skills) | `.agents/skills/jev` or `.cursor/skills/jev` | `~/.agents/skills/jev` or `~/.cursor/skills/jev` |
+| [Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/) | `.agents/skills/jev` or `.gemini/skills/jev` | `~/.agents/skills/jev` or `~/.gemini/skills/jev` |
+| [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) | `.agents/skills/jev` or `.github/skills/jev` | `~/.agents/skills/jev` or `~/.copilot/skills/jev` |
+
+This checkout already links the skill at `.agents/skills/jev` and
+`.claude/skills/jev`, so no copy is needed here. Ask your agent to use the `jev`
+skill and describe the state and questions to evaluate. Give the agent process
+access to `TYPESAFE_API_KEY` or an API key file; the skill does not store the key.
 
 ## The three primitives
 

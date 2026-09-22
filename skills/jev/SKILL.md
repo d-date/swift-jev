@@ -5,7 +5,7 @@ description: Evaluate a supplied state with TypeSafe AI Jev's noul, choice, or s
 
 # Jev evaluation
 
-Use the `jev` executable from this repository (or `swift run jev` from its root). Send one JSON object with `state` and `questions` through standard input or `--input FILE`. Put related questions in one request. The response is JSON on standard output; errors go to standard error.
+Use the `jev` executable on `PATH` (or `swift run jev` from the swift-jev checkout). If the command is unavailable, ask the user to install the CLI as described in the swift-jev README. Send one JSON object with `state` and `questions` through standard input or `--input FILE`. Put related questions in one request. The response is JSON on standard output; errors go to standard error.
 
 The key must be supplied by the user or their existing environment. The CLI reads `TYPESAFE_API_KEY` by default, or a UTF-8 file named with `--api-key-file`. Never place the key in a command argument, request JSON, skill file, or repository file. If neither source is available, ask the user to configure one. Do not read or echo the key yourself. A call sends the state to TypeSafe AI; avoid including unrelated private data.
 
