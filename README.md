@@ -1,10 +1,13 @@
 # swift-jev
 
-A Swift client for [Jev](https://docs.typesafe.ai/), TypeSafe AI's System One model.
+A Swift library and CLI for [Jev](https://docs.typesafe.ai/), TypeSafe AI's System One model.
 
 Jev does not write text. You hand it a state and some typed questions, and it hands
-back typed answers with calibrated probabilities. This package makes that exchange
-type-safe from Swift, so question names never appear at a call site.
+back typed answers with calibrated probabilities. Use the [Swift library](#the-three-primitives)
+for type-safe reads in an app, or the [CLI](#cli-and-agent-skill) for JSON-based
+calls from a terminal or coding agent.
+
+## Swift example
 
 ```swift
 enum Department: String, JevChoiceOptions {
@@ -67,10 +70,19 @@ about 20 seconds.
 
 ## CLI and agent skill
 
-Build the `jev` executable with `swift build -c release`, or run it with
-`swift run jev`. It reads a JSON request from standard input by default, or from
-`--input FILE`, and writes the JSON response to standard output. Diagnostics go
-to standard error. `--help` lists all options.
+From this checkout, run `swift run jev --input request.json`. For a standalone
+binary, run `swift build -c release` and use `.build/release/jev`. The CLI reads
+standard input when `--input` is omitted. It writes only the JSON response to
+standard output and sends errors to standard error.
+
+Set `TYPESAFE_API_KEY` in the CLI process environment through your shell or secret
+manager. Alternatively, pass `--api-key-file PATH` to read a UTF-8 file containing
+only the key; a trailing newline is fine. Keep that file outside the repo and
+restrict its permissions, for example with `chmod 600 PATH`. The file takes
+precedence over the environment. Do not put the key in the request JSON or command
+arguments.
+
+Save the following as `request.json`:
 
 ```json
 {
@@ -95,24 +107,33 @@ to standard error. `--help` lists all options.
 }
 ```
 
-Save this as `request.json`, then run `swift run jev --input request.json`.
+Then run:
+
+```sh
+swift run jev --input request.json
+# Or pass the same JSON through standard input:
+cat request.json | swift run jev
+```
+
+The response has `model`, `answers`, and `usage` fields. For example, a Noul answer
+appears as `{"type":"noul","noul":0.97}` under its question name. Choice and score
+answers include their confidence and probability distributions. A Noul answer has
+no separate confidence; its probability is the signal.
+
 `state` accepts any JSON value. Questions use the same `type`, `instructions`,
 and `criteria` shapes as the Jev API. `choice` descriptions may be `null`;
 `noul` criteria is optional. The CLI validates questions before sending them.
 
-The CLI reads `TYPESAFE_API_KEY` from its environment. Configure that variable
-through your shell or secret manager; do not put the key in the JSON request or
-command arguments. Alternatively, use `--api-key-file PATH` to read a UTF-8 file
-containing only the key (a trailing newline is fine). Restrict that file's
-permissions, for example with `chmod 600 PATH`, and keep it outside the repo.
-The file takes precedence over the environment. The CLI exits with status 2 for
-input or configuration errors and 1 for API or network errors. `--model` defaults
-to `jev-latest`; `--endpoint` is available for compatible HTTPS endpoints and
-local HTTP testing.
+Run `swift run jev --help` for all options. The CLI exits with status 2 for input
+or configuration errors and 1 for API or network errors. `--model` defaults to
+`jev-latest`; `--endpoint` accepts compatible HTTPS endpoints and local HTTP
+endpoints for testing.
 
 The shared [Jev skill](skills/jev/SKILL.md) is linked at `.agents/skills/jev` for
-Codex and `.claude/skills/jev` for Claude Code. Both agents can use the same CLI
-and API key configuration from this checkout.
+Codex and `.claude/skills/jev` for Claude Code. From this checkout, ask either
+agent to use the `jev` skill to evaluate a state and describe the questions you
+want answered. Give the agent process access to `TYPESAFE_API_KEY` or an API key
+file; the skill does not store the key.
 
 ## The three primitives
 
