@@ -270,23 +270,6 @@ struct Stub: JevTransport {
 let client = JevClient(apiKey: "test", transport: Stub())
 ```
 
-## A note on Foundation Models
-
-There is no `JevFoundationModels` module, and that is deliberate. A `@Generable`
-value already satisfies `Encodable & Sendable`, so it can be passed as the state
-with no help from this package.
-
-What this package also does not ship is a "normalise on device, then ask Jev"
-helper. Measured over 12 Japanese inquiries, five runs each, that arrangement:
-
-- dropped classification accuracy from 100% to 93%
-- invented dates in 14 of the 28 extracted deadline fields
-- multiplied latency by 6.3
-
-Preprocessing helped one task and hurt another, so the useful default is to measure
-per task rather than to reach for a convenience function. Sending the raw text is
-worth trying first.
-
 ## Why there is no macro
 
 An earlier version of this package derived the questions from a struct with a
