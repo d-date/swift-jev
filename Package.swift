@@ -12,10 +12,13 @@ let package = Package(
     .visionOS(.v1),
   ],
   products: [
-    .library(name: "Jev", targets: ["Jev"])
+    .library(name: "Jev", targets: ["Jev"]),
+    .executable(name: "jev", targets: ["JevCLI"]),
   ],
   targets: [
     .target(name: "Jev"),
+    .executableTarget(name: "JevCLI", dependencies: ["Jev"]),
+    .testTarget(name: "JevCLITests", dependencies: ["JevCLI"]),
     .testTarget(
       name: "JevTests",
       dependencies: ["Jev"]

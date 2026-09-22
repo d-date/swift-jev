@@ -65,6 +65,55 @@ visionOS 1+. Linux is declared and the code is written for it, but it is not yet
 covered by CI — treat it as untested. **No dependencies**, so a clean build takes
 about 20 seconds.
 
+## CLI and agent skill
+
+Build the `jev` executable with `swift build -c release`, or run it with
+`swift run jev`. It reads a JSON request from standard input by default, or from
+`--input FILE`, and writes the JSON response to standard output. Diagnostics go
+to standard error. `--help` lists all options.
+
+```json
+{
+  "state": {"message": "The app is down; please help today"},
+  "questions": {
+    "urgent": {
+      "type": "noul",
+      "instructions": "Does this need attention today?",
+      "criteria": {"true": "Active outage or explicit deadline", "false": "Routine request"}
+    },
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this?",
+      "criteria": {"technical": "Bugs and outages", "billing": "Charges and refunds"}
+    },
+    "severity": {
+      "type": "score",
+      "instructions": "How severe is the impact?",
+      "criteria": ["Low", "Moderate", "High"]
+    }
+  }
+}
+```
+
+Save this as `request.json`, then run `swift run jev --input request.json`.
+`state` accepts any JSON value. Questions use the same `type`, `instructions`,
+and `criteria` shapes as the Jev API. `choice` descriptions may be `null`;
+`noul` criteria is optional. The CLI validates questions before sending them.
+
+The CLI reads `TYPESAFE_API_KEY` from its environment. Configure that variable
+through your shell or secret manager; do not put the key in the JSON request or
+command arguments. Alternatively, use `--api-key-file PATH` to read a UTF-8 file
+containing only the key (a trailing newline is fine). Restrict that file's
+permissions, for example with `chmod 600 PATH`, and keep it outside the repo.
+The file takes precedence over the environment. The CLI exits with status 2 for
+input or configuration errors and 1 for API or network errors. `--model` defaults
+to `jev-latest`; `--endpoint` is available for compatible HTTPS endpoints and
+local HTTP testing.
+
+The shared [Jev skill](skills/jev/SKILL.md) is linked at `.agents/skills/jev` for
+Codex and `.claude/skills/jev` for Claude Code. Both agents can use the same CLI
+and API key configuration from this checkout.
+
 ## The three primitives
 
 | Question | Answer | What comes back |
