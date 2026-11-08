@@ -209,8 +209,8 @@ enum CLIOutput {
     let output: JSONValue = .object([
       "model": .string(response.model), "answers": .object(answers),
       "usage": .object([
-        "input_tokens": .integer(Int64(response.usage.inputTokens)),
-        "output_tokens": .integer(Int64(response.usage.outputTokens)),
+        "input_tokens": response.usage.inputTokens.map { .integer(Int64($0)) } ?? .null,
+        "output_tokens": response.usage.outputTokens.map { .integer(Int64($0)) } ?? .null,
       ]),
     ])
     let encoder = JSONEncoder()

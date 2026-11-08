@@ -47,7 +47,7 @@ try response.require(department)       // Department
 try response.require(urgency)          // Probability
 response.confidence(of: department)    // Double?
 response.probabilities(of: department) // [Department: Double]?
-response.usage.estimatedCostUSD        // Double
+response.usage.estimatedCostUSD        // Double? (nil if tokens unreported)
 ```
 
 All three questions travel in one request. Jev evaluates them in parallel, so

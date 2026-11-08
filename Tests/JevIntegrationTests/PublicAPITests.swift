@@ -96,9 +96,9 @@ struct LiveTests {
     #expect(SupportTeam.allCases.contains(chosen))
     #expect((0...1).contains(try response.require(urgency).value))
     #expect((0...2).contains(try response.require(frustration).value))
-    #expect(response.usage.inputTokens > 0)
+    #expect(try #require(response.usage.inputTokens) > 0)
     // Output is reported but never billed, so cost tracks input alone.
-    #expect(response.usage.estimatedCostUSD > 0)
+    #expect(try #require(response.usage.estimatedCostUSD) > 0)
 
     let confidence = try #require(response.confidence(of: team))
     #expect((0...1).contains(confidence))

@@ -66,6 +66,9 @@ TypeSafe AI の判断専用モデル **Jev**（System One Models）を Swift か
 }
 ```
 
+`usage` のトークン数は、サーバーが報告しない場合 `null` になる（公式 SDK v0.7.0 で明記）。
+`Usage.inputTokens` / `outputTokens` / `estimatedCostUSD` はそのため Optional。
+
 ## パッケージ構成
 
 ```
