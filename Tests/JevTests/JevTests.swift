@@ -326,6 +326,16 @@ struct UsageTests {
     #expect(response.usage.inputTokens == 394)
     // Output tokens are reported but never billed.
     #expect(response.usage.outputTokens == 57)
-    #expect(abs(response.usage.estimatedCostUSD - 394 * 0.042 / 1_000_000) < 1e-12)
+    #expect(abs(try #require(response.usage.estimatedCostUSD) - 394 * 0.042 / 1_000_000) < 1e-12)
+  }
+
+  @Test("unreported token counts decode as nil instead of failing the response")
+  func nullCounts() throws {
+    let json = """
+      {"model":"m","answers":{},"usage":{"input_tokens":null,"output_tokens":null}}
+      """
+    let response = try JSONDecoder().decode(JevResponse.self, from: Data(json.utf8))
+    #expect(response.usage == Usage(inputTokens: nil, outputTokens: nil))
+    #expect(response.usage.estimatedCostUSD == nil)
   }
 }

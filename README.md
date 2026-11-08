@@ -47,7 +47,7 @@ try response.require(department)       // Department
 try response.require(urgency)          // Probability
 response.confidence(of: department)    // Double?
 response.probabilities(of: department) // [Department: Double]?
-response.usage.estimatedCostUSD        // Double
+response.usage.estimatedCostUSD        // Double? (nil if tokens unreported)
 ```
 
 All three questions travel in one request. Jev evaluates them in parallel, so
@@ -56,7 +56,7 @@ asking more of them costs almost no extra latency.
 ## Installation
 
 ```swift
-.package(url: "https://github.com/d-date/swift-jev", from: "1.0.0")
+.package(url: "https://github.com/d-date/swift-jev", from: "2.0.0")
 ```
 
 ```swift

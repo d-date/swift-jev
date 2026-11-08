@@ -1,12 +1,12 @@
 import Foundation
 
-/// Token counts for one request.
+/// Token counts for one request. Either count is `nil` when the server did not report it.
 public struct Usage: Sendable, Hashable, Decodable {
-  public let inputTokens: Int
+  public let inputTokens: Int?
   /// Reported by the server but never billed; Jev charges for input only.
-  public let outputTokens: Int
+  public let outputTokens: Int?
 
-  public init(inputTokens: Int, outputTokens: Int) {
+  public init(inputTokens: Int?, outputTokens: Int?) {
     self.inputTokens = inputTokens
     self.outputTokens = outputTokens
   }
@@ -18,9 +18,10 @@ public struct Usage: Sendable, Hashable, Decodable {
 
   /// Cost in USD at the published rate of $0.042 per million input tokens.
   ///
-  /// A convenience for logging, not a billing source of truth.
-  public var estimatedCostUSD: Double {
-    Double(inputTokens) * 0.042 / 1_000_000
+  /// A convenience for logging, not a billing source of truth. `nil` when the
+  /// server did not report input tokens.
+  public var estimatedCostUSD: Double? {
+    inputTokens.map { Double($0) * 0.042 / 1_000_000 }
   }
 }
 
