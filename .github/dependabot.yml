@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Jev is an HTTP API with no Swift package to depend on. The official
+  # TypeSafe SDK is pinned here only as a release signal: when Dependabot
+  # opens a PR, diff the SDK release against docs/SPEC.md and Sources/Jev,
+  # update swift-jev to match, then merge the bump.
+  - package-ecosystem: npm
+    directory: /.github/jev-upstream
+    schedule:
+      interval: daily
+    versioning-strategy: increase
+    commit-message:
+      prefix: "Track Jev upstream"
+    open-pull-requests-limit: 1
+

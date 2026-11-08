@@ -1,0 +1,8 @@
+{
+  "name": "swift-jev-upstream-tracker",
+  "private": true,
+  "description": "Not installed or built. Dependabot watches this pin to flag Jev API changes; see .github/dependabot.yml.",
+  "dependencies": {
+    "@typesafe-ai/sdk": "0.7.0"
+  }
+}
