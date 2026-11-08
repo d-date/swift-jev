@@ -56,7 +56,7 @@ asking more of them costs almost no extra latency.
 ## Installation
 
 ```swift
-.package(url: "https://github.com/d-date/swift-jev", from: "1.0.0")
+.package(url: "https://github.com/d-date/swift-jev", from: "2.0.0")
 ```
 
 ```swift
